@@ -1,4 +1,9 @@
 library(MFDFA)
+library(foreach)
+library(doParallel)
+
+
+
 
 
 
@@ -51,6 +56,58 @@ generate_brownian_motion <- function(n) {
   return(w)
 }
 
+
+generate_experiments <-  function(time_series_length,n_simulations = 1000){
+  
+  left_simulations <- n_simulations
+
+  
+  vec_deltaH <- vector("numeric", n_simulations)
+  
+  # each iteration creates a  time series with a Brownian Motion generative process
+  
+  for(i in 1:n_simulations){
+    brownian_motion <- generate_brownian_motion(time_series_length)     
+
+    deltaH_Brownian_motion <- calcDeltaH(brownian_motion,N=time_series_length)
+    vec_deltaH[i] <- deltaH_Brownian_motion # saving its delta H
+    left_simulations <- left_simulations - 1
+    print(paste("The are more", as.character(left_simulations), "to go"))
+    print(paste(round(((n_simulations-left_simulations)/n_simulations) * 100,2), "%","Completed"))
+    
+  }
+  
+  return(vec_deltaH)
+}
+
+
+generate_experiments_parallel <-  function(time_series_length,n_simulations = 1000){
+  
+  # Set the number of cores you want to use for parallel processing
+  # Change 'num_cores' to the desired number of cores
+  # Get the total number of cores
+  numOfCores <- detectCores()
+  
+ 
+  # Register all the cores
+  registerDoParallel(numOfCores)
+  
+  left_simulations <- n_simulations
+  
+  vec_deltaH <- foreach(i = 1:n_simulations, .combine = 'c') %dopar% {
+    brownian_motion <- generate_brownian_motion(time_series_length)     
+    deltaH_Brownian_motion <- calcDeltaH(brownian_motion, N = time_series_length)
+    vec_deltaH[i] <- deltaH_Brownian_motion # saving its delta H
+    left_simulations <- left_simulations - 1
+    print(paste("There are more", as.character(left_simulations), "to go"))
+    print(paste(round(((n_simulations - left_simulations) / n_simulations) * 100, 2), "%", "Completed"))
+    return(deltaH_Brownian_motion)
+  }
+  
+  # Stop the parallel backend and clean up
+  
+  return(vec_deltaH)
+}
 
 
 
