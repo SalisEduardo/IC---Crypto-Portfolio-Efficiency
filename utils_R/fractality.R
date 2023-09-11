@@ -4,9 +4,6 @@ library(doParallel)
 
 
 
-
-
-
 calcMDM <- function(x, N= dim(x)[1],scale=10:(N/4),q=-4:4,m=1){
   b <- MFDFA(x, scale, m, q)
   
@@ -57,6 +54,23 @@ generate_brownian_motion <- function(n) {
 }
 
 
+generate_random_walk_returns <- function(N) {
+  # Initialize the vector to store prices
+  prices <- numeric(N)
+  prices[1] <- 300 # initial price
+  
+  # Generate random walk process
+  for (i in 2:N) {
+    prices[i] <- prices[i - 1] + rnorm(1, 0, 1)
+  }
+  
+  # Compute returns
+  returns <- diff(log(prices))
+  
+  return(returns)
+}
+
+
 generate_experiments <-  function(time_series_length,n_simulations = 1000){
   
   left_simulations <- n_simulations
@@ -93,6 +107,7 @@ generate_experiments_parallel <-  function(time_series_length,n_simulations = 10
   registerDoParallel(numOfCores)
   
   left_simulations <- n_simulations
+  vec_deltaH <- vector("numeric", n_simulations)
   
   vec_deltaH <- foreach(i = 1:n_simulations, .combine = 'c') %dopar% {
     brownian_motion <- generate_brownian_motion(time_series_length)     
@@ -110,6 +125,34 @@ generate_experiments_parallel <-  function(time_series_length,n_simulations = 10
 }
 
 
+generate_experiments_parallel_v2 <-  function(time_series_length,n_simulations = 1000){
+  
+  # Set the number of cores you want to use for parallel processing
+  # Change 'num_cores' to the desired number of cores
+  # Get the total number of cores
+  numOfCores <- detectCores()
+  
+  
+  # Register all the cores
+  registerDoParallel(numOfCores)
+  
+  left_simulations <- n_simulations
+  
+  vec_deltaH <- vector("numeric", n_simulations)
+  vec_deltaH <- foreach(i = 1:n_simulations, .combine = 'c') %dopar% {
+    brownian_motion <- generate_random_walk_returns(time_series_length) # Different methodology to generate RW returns
+    deltaH_Brownian_motion <- calcDeltaH(brownian_motion, N = time_series_length)
+    vec_deltaH[i] <- deltaH_Brownian_motion # saving its delta H
+    left_simulations <- left_simulations - 1
+    print(paste("There are more", as.character(left_simulations), "to go"))
+    print(paste(round(((n_simulations - left_simulations) / n_simulations) * 100, 2), "%", "Completed"))
+    return(deltaH_Brownian_motion)
+  }
+  
+  # Stop the parallel backend and clean up
+  
+  return(vec_deltaH)
+}
 
 
 

@@ -1,0 +1,161 @@
+---
+title: "Crypto Rolling Efficiency"
+format: 
+  html:
+    self-contained: true
+execute: 
+  echo: false
+
+editor: visual
+---
+
+```{r}
+#| echo: false
+#| output: asis
+#| message: false
+#| results: hide
+#| include: false
+#| warning: false
+
+source('trading_signals_deltaH.R')
+library(knitr)
+library(kableExtra)
+
+
+```
+
+# Time series Plots
+
+## Window : 360
+
+-   Delta H computed over rolling 360 days
+
+-   Confidence interval obtained from 10.000 GBM simulations series of returns of length equal to 360
+
+    ```{r}
+    #| echo: false
+    #| output: asis
+
+
+    cat(paste("*","q90:",q90_360,"\n"))
+    cat(paste("*","q95:",q95_360,"\n"))
+    cat(paste("*","q99:",q99_360,"\n"))
+
+
+    ```
+
+```{r}
+#| echo: false
+#| output: asis
+
+
+
+for(t in unique(deltaH_melt_360$Ticker)){
+  cat(paste("###",t,"\n"))
+  
+  print(plot_time_varying_efficiency(deltaH_melt_360,t,'360'))
+  
+}
+
+
+```
+## Window : 720
+
+-   Delta H computed over rolling 720 days
+
+-   Confidence interval obtained from 10.000 GBM simulations series of returns of length equal to 720
+
+    ```{r}
+    #| echo: false
+    #| output: asis
+
+
+    cat(paste("*","q90:",q90_720,"\n"))
+    cat(paste("*","q95:",q95_720,"\n"))
+    cat(paste("*","q99:",q99_720,"\n"))
+
+
+    ```
+
+```{r}
+#| echo: false
+#| output: asis
+
+
+
+for(t in unique(deltaH_melt_720$Ticker)){
+  cat(paste("###",t,"\n"))
+  
+  print(plot_time_varying_efficiency(deltaH_melt_720,t,'720'))
+  
+}
+
+
+```
+
+
+
+## Window : 1080
+
+-   Delta H computed over rolling 1080 days
+
+-   Confidence interval obtained from 10.000 GBM simulations series of returns of length equal to 1080
+
+    ```{r}
+    #| echo: false
+    #| output: asis
+
+
+    cat(paste("*","q90:",q90_1080,"\n"))
+    cat(paste("*","q95:",q95_1080,"\n"))
+    cat(paste("*","q99:",q99_1080,"\n"))
+
+
+    ```
+
+```{r}
+#| echo: false
+#| output: asis
+
+
+
+for(t in unique(deltaH_melt_1080$Ticker)){
+  cat(paste("###",t,"\n"))
+  
+  print(plot_time_varying_efficiency(deltaH_melt_1080,t,'1080'))
+  
+}
+
+
+```
+
+
+
+# Summary Tables
+
+## Window : 360
+
+```{r}
+
+status_efficiency_crypto_360 |>
+  kable(format = "html") |>
+  kable_styling(bootstrap_options = "striped", full_width = FALSE)
+```
+## Window : 720
+
+```{r}
+
+status_efficiency_crypto_720 |>
+  kable(format = "html") |>
+  kable_styling(bootstrap_options = "striped", full_width = FALSE)
+```
+
+## Window : 1080
+
+```{r}
+
+status_efficiency_crypto_1080 |>
+  kable(format = "html") |>
+  kable_styling(bootstrap_options = "striped", full_width = FALSE)
+```
+
