@@ -1,4 +1,10 @@
 
+get_totalReturn <- function(dailyRets){
+  total_rets <- prod(1 + dailyRets) - 1
+  return(total_rets)
+}
+
+
 
 get_cumulative_returns <- function(dailyRets){
   cum_rets <- cumprod(1 + dailyRets) - 1
