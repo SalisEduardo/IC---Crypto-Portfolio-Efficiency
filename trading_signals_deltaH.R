@@ -48,7 +48,6 @@ plot_time_varying_efficiency <- function(df, ticker,window_lenght='360'){
   return(plt)
 }
 
-
 summarise_status_efficiency <- function(df){
   df_summmary <- df |>
     group_by(Ticker) |>
@@ -79,11 +78,18 @@ backtest_strategy <- function(df, ticker, threshold_column='q70',position='Short
   
   if(position == 'Short-Inefficiency'){
     ticker_df <-ticker_df |> 
-      dplyr::mutate(strat_returns = ifelse(signals == 1, return*-1, 0))
+      dplyr::mutate(strat_returns = ifelse(signals == 1, return*-1, return*0))
     
+  }else if(position == 'Short-Inefficiency-Long-Efficiency'){
+    ticker_df <-ticker_df |> 
+      dplyr::mutate(strat_returns = ifelse(signals == 1, return*-1, return*1))
   }else if (position == 'Short-Efficiency'){
     ticker_df <-ticker_df |> 
-      dplyr::mutate(strat_returns = ifelse(signals == 0, return*-1, 0))
+      dplyr::mutate(strat_returns = ifelse(signals == 0, return*-1, return*0))
+  
+  }else if (position == 'Short-Efficiency-Long-Inefficiency'){
+    ticker_df <-ticker_df |> 
+      dplyr::mutate(strat_returns = ifelse(signals == 0, return*-1, return*1))
   }else(
 
     stop('invalid position')
@@ -201,6 +207,8 @@ consolidate_backtests <- function(deltah_melt,...){
   
 }
 
-consolidate_backtests(deltaH_melt_360, threshold_column='q70',position='Short-Inefficiency')[[1]]
+consolidate_backtests(deltaH_melt_360, threshold_column='q70',position='Short-Inefficiency-Long-Efficiency')[[2]]
 consolidate_backtests(deltaH_melt_360, threshold_column='q70',position='Short-Inefficiency')[[2]]
+consolidate_backtests(deltaH_melt_360, threshold_column='q70',position='Short-Efficiency-Long-Inefficiency')[[2]]
+consolidate_backtests(deltaH_melt_360, threshold_column='q70',position='Short-Efficiency')[[2]]
 

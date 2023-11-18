@@ -1,0 +1,342 @@
+---
+title: "Top S&P500 Rolling Efficiency"
+format: 
+  html:
+    self-contained: true
+execute: 
+  echo: false
+
+editor: visual
+---
+
+```{r}
+#| echo: false
+#| output: asis
+#| message: false
+#| results: hide
+#| include: false
+#| warning: false
+
+options(warn=-1)
+setwd("~/Documents/Faculdade/IC - Crypto Portfolio Efficiency")
+source('stocks_sp500_deltaH.R')
+library(knitr)
+library(kableExtra)
+
+
+# Stocks delta H ---------------------------------------------------------------
+
+
+deltaH_melt_360_top <- read.csv("stocks_rolling_deltaH/Top_components/deltaH_melt_360.csv") |>
+  dplyr::mutate(q70=quantile(rw_deltaH_360_10000, 0.70),
+                q90=quantile(rw_deltaH_360_10000, 0.90),
+                q95=quantile(rw_deltaH_360_10000, 0.95),
+                q99=quantile(rw_deltaH_360_10000, 0.99))
+deltaH_melt_720_top <- read.csv("stocks_rolling_deltaH/Top_components/deltaH_melt_720.csv") |>
+  dplyr::mutate(q70=quantile(rw_deltaH_720_10000, 0.70),
+                q90=quantile(rw_deltaH_720_10000, 0.90),
+                q95=quantile(rw_deltaH_720_10000, 0.95),
+                q99=quantile(rw_deltaH_720_10000, 0.99))
+
+deltaH_melt_1080_top <- read.csv("stocks_rolling_deltaH/Top_components/deltaH_melt_1080.csv")  |>
+  dplyr::mutate(q70=quantile(rw_deltaH_1080_10000, 0.70),
+                q90=quantile(rw_deltaH_1080_10000, 0.90),
+                q95=quantile(rw_deltaH_1080_10000, 0.95),
+                q99=quantile(rw_deltaH_1080_10000, 0.99))
+
+
+
+status_efficiency_stocks_360_top <- summarise_status_efficiency(deltaH_melt_360_top)
+status_efficiency_stocks_720_top <- summarise_status_efficiency(deltaH_melt_720_top)
+status_efficiency_stocks_1080_top <- summarise_status_efficiency(deltaH_melt_1080_top)
+
+
+```
+
+# Time series Plots
+
+## Window : 360
+
+-   Delta H computed over rolling 360 days
+
+-   Confidence interval obtained from 10.000 GBM simulations series of returns of length equal to 360
+
+    ```{r}
+    #| echo: false
+    #| output: asis
+
+    cat(paste("*","q70:",q70_360,"\n"))
+    cat(paste("*","q90:",q90_360,"\n"))
+    cat(paste("*","q95:",q95_360,"\n"))
+    cat(paste("*","q99:",q99_360,"\n"))
+
+
+    ```
+
+```{r}
+#| echo: false
+#| output: asis
+
+
+
+for(t in unique(deltaH_melt_360_top$Ticker)){
+  cat(paste("###",t,"\n"))
+  
+  print(plot_time_varying_efficiency(deltaH_melt_360_top,t,'360'))
+  cat("\n")
+  
+  
+}
+cat("\n")
+
+```
+
+## Window : 720
+
+-   Delta H computed over rolling 720 days
+
+-   Confidence interval obtained from 10.000 GBM simulations series of returns of length equal to 720
+
+    ```{r}
+    #| echo: false
+    #| output: asis
+
+    cat(paste("*","q70:",q70_720,"\n"))
+    cat(paste("*","q90:",q90_720,"\n"))
+    cat(paste("*","q95:",q95_720,"\n"))
+    cat(paste("*","q99:",q99_720,"\n"))
+
+
+    ```
+
+```{r}
+#| echo: false
+#| output: asis
+
+
+
+for(t in unique(deltaH_melt_720_top$Ticker)){
+  cat(paste("###",t,"\n"))
+  
+  print(plot_time_varying_efficiency(deltaH_melt_720_top,t,'720'))
+  cat("\n")
+  
+}
+cat("\n")
+
+```
+
+## Window : 1080
+
+-   Delta H computed over rolling 1080 days
+
+-   Confidence interval obtained from 10.000 GBM simulations series of returns of length equal to 1080
+
+    ```{r}
+    #| echo: false
+    #| output: asis
+
+    cat(paste("*","q70:",q70_1080,"\n"))
+    cat(paste("*","q90:",q90_1080,"\n"))
+    cat(paste("*","q95:",q95_1080,"\n"))
+    cat(paste("*","q99:",q99_1080,"\n"))
+
+
+    ```
+
+```{r}
+#| echo: false
+#| output: asis
+
+
+
+for(t in unique(deltaH_melt_1080_top$Ticker)){
+  cat(paste("###",t,"\n"))
+  
+  print(plot_time_varying_efficiency(deltaH_melt_1080_top,t,'1080'))
+  cat("\n")
+  
+}
+cat("\n") 
+
+```
+
+# Summary Tables
+
+## Window : 360
+
+```{r}
+
+status_efficiency_stocks_360_top |>
+  kable(format = "html") |>
+  kable_styling(bootstrap_options = "striped", full_width = FALSE)
+```
+
+## Window : 720
+
+```{r}
+
+status_efficiency_stocks_720_top |>
+  kable(format = "html") |>
+  kable_styling(bootstrap_options = "striped", full_width = FALSE)
+```
+
+## Window : 1080
+
+```{r}
+
+status_efficiency_stocks_1080_top |>
+  kable(format = "html") |>
+  kable_styling(bootstrap_options = "striped", full_width = FALSE)
+```
+
+# Backtesting
+
+Return KPIs for various strategies applied to different cryptocurrencies:
+
+-   Short-Inefficiency-Long-Efficiency: go short when the series becomes statistically inefficient (above a certain quantile - e.g. q90) and go long when it is below that level.
+
+Short-Inefficiency: stay short only when the series becomes statistically inefficient and do nothing when it is below that level.
+
+-   Short-Efficiency: stay short only when the series becomes statistically efficient and do nothing when it becomes inefficient.
+
+-   Short-Efficiency-Long-Inefficiency: stay long only when the series becomes statistically efficient and do nothing when it becomes inefficient.
+
+Note: Positions are taken one day after the efficiency level crosses the significance quantile.
+
+```{r}
+table_results <- list() 
+
+```
+
+## **360-day Window**
+
+```{r}
+#| echo: false
+#| output: asis
+
+
+positions <- c('Short-Inefficiency-Long-Efficiency', 'Short-Inefficiency', 'Short-Efficiency-Long-Inefficiency', 'Short-Efficiency')
+
+quantiles_ineff <- c("q70",'q90','q95','q99')
+
+
+
+for(q in quantiles_ineff){
+  cat(paste("### Significance",q, "\n"))
+  for (position in positions) {
+  
+  
+  result <- consolidate_backtests(deltaH_melt_360_top, threshold_column=q, position=position,tab_returns= returns_long_top20 )[[2]]|> 
+    dplyr::arrange(desc(`Annualized Return`)) |>
+    dplyr::mutate(Significance_level = q) |>
+    dplyr::mutate(Window = 360)
+  
+  table_results[[length(table_results) + 1]] <- result 
+  # Create a topic for each result
+  cat(paste("*",q," : ", position, "\n"))
+  
+  # Print the result as a kable table with styling
+  kable_result <- kable(result, format = "html") %>%
+    kable_styling(bootstrap_options = "striped", full_width = FALSE)
+  cat(kable_result)
+  
+  
+}
+  
+}
+
+print("\n")
+
+```
+
+## 720 window
+
+```{r}
+#| echo: false
+#| output: asis
+
+
+positions <- c('Short-Inefficiency-Long-Efficiency', 'Short-Inefficiency', 'Short-Efficiency-Long-Inefficiency', 'Short-Efficiency')
+
+quantiles_ineff <- c("q70",'q90','q95','q99')
+
+for(q in quantiles_ineff){
+  cat(paste("### Significance",q, "\n"))
+  for (position in positions) {
+  
+  
+  result <- consolidate_backtests(deltaH_melt_720_top, threshold_column=q, position=position,tab_returns= returns_long_top20 )[[2]]|> 
+    dplyr::arrange(desc(`Annualized Return`)) |>
+    dplyr::mutate(Significance_level = q) |>
+    dplyr::mutate(Window = 720)
+  table_results[[length(table_results) + 1]] <- result 
+  # Create a topic for each result
+  cat(paste("*",q," : ", position, "\n"))
+  
+  # Print the result as a kable table with styling
+  kable_result <- kable(result, format = "html") %>%
+    kable_styling(bootstrap_options = "striped", full_width = FALSE)
+  cat(kable_result)
+  
+  
+}
+  
+}
+
+print("\n")
+
+```
+
+## 1080 Window
+
+```{r}
+#| echo: false
+#| output: asis
+
+
+positions <- c('Short-Inefficiency-Long-Efficiency', 'Short-Inefficiency', 'Short-Efficiency-Long-Inefficiency', 'Short-Efficiency')
+
+quantiles_ineff <- c("q70",'q90','q95','q99')
+
+for(q in quantiles_ineff){
+  cat(paste("### Significance",q, "\n"))
+  for (position in positions) {
+  
+  
+  result <- consolidate_backtests(deltaH_melt_1080_top, threshold_column=q, position=position,tab_returns= returns_long_top20 )[[2]] |> 
+    dplyr::arrange(desc(`Annualized Return`)) |>
+    dplyr::mutate(Significance_level = q) |>
+    dplyr::mutate(Window = 1080)
+  
+  table_results[[length(table_results) + 1]] <- result 
+  # Create a topic for each result
+  cat(paste("*",q," : ", position, "\n"))
+  
+  # Print the result as a kable table with styling
+  kable_result <- kable(result, format = "html") %>%
+    kable_styling(bootstrap_options = "striped", full_width = FALSE)
+  cat(kable_result)
+  
+  
+}
+  
+}
+
+print("\n")
+```
+
+```{r}
+#| echo: false
+#| output: asis
+#| message: false
+#| results: hide
+#| include: false
+#| warning: false
+
+table_results |> 
+  bind_rows() |> 
+  writexl::write_xlsx("backtests_trading/kpis_top_sp500.xlsx")
+
+
+```
